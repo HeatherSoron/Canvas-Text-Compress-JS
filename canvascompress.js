@@ -198,13 +198,3 @@ CANVAS_COMPRESS.UnMakeSafe=function CANVAS_COMPRESSL_$_UnMakeSafe(s){
     return decodeURIComponent(s);
 }
 
-
-
-
-function Save(){
-    document.getElementById('output').value=CANVAS_COMPRESS.EncodeString(document.getElementById('input').value+'\n')
-}
-
-function Load(){
-    CANVAS_COMPRESS.DecodeImage(document.getElementById('output').value,function(s){document.getElementById('input').value=s})
-}

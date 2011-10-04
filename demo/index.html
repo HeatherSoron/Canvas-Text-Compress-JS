@@ -3,7 +3,7 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<title>Canvas Compress Example</title>
-		<script type='text/javascript' src='canvas_compress_raw_data.js'></script>
+		<script type='text/javascript' src='../canvascompress.js'></script>
 		<style>
             #saveimages img,#loadimages img{margin:1px}
             textarea {width:200px;height:200px}
@@ -35,6 +35,20 @@
         <td id='saveimages'><strong>Images:</strong><br></td>
         <td id='loadimages'><strong>Images:</strong><br></td>
     </tr>
+    <script type="text/javascript">
+        <!--
+        
+
+function Save(){
+    document.getElementById('output').value=CANVAS_COMPRESS.EncodeString(document.getElementById('input').value+'\n')
+}
+
+function Load(){
+    CANVAS_COMPRESS.DecodeImage(document.getElementById('output').value,function(s){document.getElementById('input').value=s})
+}
+
+        //-->
+    </script>
 </table>
 </body>
 </html>
