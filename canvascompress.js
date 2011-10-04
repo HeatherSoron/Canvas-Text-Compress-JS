@@ -32,120 +32,7 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 		return decodeURIComponent(s);
 	}
 
-	CANVAS_COMPRESS.EncodeString=function CANVAS_COMPRESS_$_EncodeString(s)
-	{
-		var c=document.createElement('canvas'),
-		height, width,
-		ctx, img,
-		line, col,
-		imdata,
-		i, d,
-		ret;
-
-		s = MakeSafe(s);
-		width=Math.floor(Math.pow(s.length/4,0.5));
-		if (width<3) {
-			width=3;
-		}
-		height=Math.ceil((s.length/4)/width);
-		if (height<1) {
-			height=1;
-		}
-		while(height*width-2<s.length/4) {
-			height++;
-		}
-
-		c.width=width;
-		c.height=height; // this must go before getContext!
-		ctx=c.getContext('2d');
-		ctx.globalCompositeOperation = "source-over";
-
-		line=0;
-		col=2;
-
-		imdata = ctx.createImageData(width,height);
-		imdata.data[0]=(s.length&0xFF0000000000)>>40;
-		imdata.data[1]=(s.length&0x00FF00000000)>>32;
-		imdata.data[2]=(s.length&0x0000FF000000)>>24;
-		imdata.data[3]=255;
-
-		imdata.data[4]=(s.length&0x000000FF0000)>>16;
-		imdata.data[5]=(s.length&0x00000000FF00)>>8;
-		imdata.data[6]=s.length&0x0000000000FF;
-		imdata.data[7]=255;
-
-		// Save the length into the first 2 pixels, hence col starting at 2;
-		// Using 2 pixels allows for ASCII files up to 256 TiB. With a T.
-
-		for(i=0;i<s.length;i+=4)
-		{
-			ret=CANVAS_COMPRESS.FourCharsToRGBArray(s.charAt(i),s.charAt(i+1),s.charAt(i+2),s.charAt(i+3));
-			imdata.data[i+8]=ret[0];
-			imdata.data[i+9]=ret[1];
-			imdata.data[i+10]=ret[2];
-			imdata.data[i+11]=ret[3];
-		}
-
-		ctx.putImageData(imdata,0,0);
-
-		d=c.toDataURL("image/png");
-		if (document.getElementById('saveimages')){
-			img=document.createElement('img');
-			img.src=d;
-			document.getElementById('saveimages').appendChild(img);
-		}
-		return d.substring(HEADER.length); // remove the 'header'
-	};
-	CANVAS_COMPRESS.DecodeImage=function CANVAS_COMPRESS_$_DecodeImage(i,f)
-	{
-		var img=document.createElement('img'),
-		c;
-		img.src=HEADER+i;
-		if (document.getElementById('loadimages')) {
-			document.getElementById('loadimages').appendChild(img);
-		}
-		c=document.createElement('canvas');
-		img.onload=function(){
-
-			var h=img.height,
-			w=img.width,
-			ctx=c.getContext('2d'),
-			ptx, len,
-			s = '',
-			j;
-
-			c.width=w;
-			c.height=h;
-			ctx.globalCompositeOperation = "source-over";
-			ctx.drawImage(img,0,0);
-			px=ctx.getImageData(0,0,w,h);
-			// first 2 pixels contain the length, sufficient to deal with up to 256 TiB ASCII files
-			len=(px.data[0]<<40)+(px.data[1]<<32)+(px.data[2]<<24)+(px.data[4]<<16)+(px.data[5]<<8)+(px.data[6])+8;
-
-			// note: add 8 to skip these properly :)
-			// note 2: 3 and 7 are both alphas.
-
-			// start at 8
-			for(j=8;j<=len;j+=4) // have to skip the alpha
-			{
-				s+=CANVAS_COMPRESS.RGBToFourCharString(px.data[j],px.data[j+1],px.data[j+2]);
-			}
-			if (f) {
-				f(UnMakeSafe(s.replace(/%0Aa*$/,'%0A'))); // the save file must end with a newline and then a's (which are nulls). Remove them
-			}
-
-		};
-
-	};
-
-
-
-
-
-
-
-	CANVAS_COMPRESS.CompressCharTo6BitNum=function CANVAS_COMPRESS_$_CompressCharTo6BitNum(c)
-	{
+	function CompressCharTo6BitNum(c) {
 		if (typeof c !== 'string' || c.length === 0) {
 			return 0; // yes, this is 'a', I know, but it'll get fixed.
 		}
@@ -153,15 +40,15 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 		// Assume we have ensured that already.
 		// output order os a-z, A-Z, 0-9, %, .
 
-		var n=c.charCodeAt(0);
+		var n = c.charCodeAt(0);
 
-		if (n>=97 && n<=122) { // a-z
+		if (n >= 97 && n <= 122) { // a-z
 			return n-97; // 0 to 25
 		}
-		if (n>=65 && n<=90) { // A-Z
+		if (n >= 65 && n <= 90) { // A-Z
 			return n-39; // 26 to 51
 		}
-		if (n>=48 && n<=57) { // 0-9
+		if (n >= 48 && n <= 57) { // 0-9
 			return n+4; // 52-61
 		}
 		if (n === 37) { // %
@@ -170,18 +57,19 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 		if (n === 9) { // \t
 			return 63;
 		}
+		return 0;
 	//console.error('Cannot compress ' +c);
-	};
-	CANVAS_COMPRESS.Inflate6BitNumToChar=function CANVAS_COMPRESS_$_Inflate6BitNumToChar(n)
-	{
-		if (n<=25) { // a-z
-			return String.fromCharCode(n+97);
+	}
+
+	function Inflate6BitNumToChar(n) {
+		if (n <= 25) { // a-z
+			return String.fromCharCode(n + 97);
 		}
-		if (n<=51) { // A-Z
-			return String.fromCharCode(n+39);
+		if (n <= 51) { // A-Z
+			return String.fromCharCode(n + 39);
 		}
-		if (n<=61) { // 0-9
-			return String.fromCharCode(n-4);
+		if (n <= 61) { // 0-9
+			return String.fromCharCode(n - 4);
 		}
 		if (n === 62) {
 			return '%';
@@ -189,41 +77,141 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 		if (n === 63) {
 			return '\t';
 		}
-	};
+		return '';
+	}
 
-	CANVAS_COMPRESS.FourCharsToRGB=function CANVAS_COMPRESS_$_FourCharsToRGB(c1,c2,c3,c4)
-	{
-		c1=CANVAS_COMPRESS.CompressCharTo6BitNum(c1);
-		c2=CANVAS_COMPRESS.CompressCharTo6BitNum(c2);
-		c3=CANVAS_COMPRESS.CompressCharTo6BitNum(c3);
-		c4=CANVAS_COMPRESS.CompressCharTo6BitNum(c4);
+	function FourCharsToRGB(c1, c2, c3, c4) {
+		c1 = CompressCharTo6BitNum(c1);
+		c2 = CompressCharTo6BitNum(c2);
+		c3 = CompressCharTo6BitNum(c3);
+		c4 = CompressCharTo6BitNum(c4);
 		// 11111122 22223333 33444444
 		var r=(c1<<2)|((c2&0x30)>>4);
 		var g=((c2&0x0F)<<4)|((c3&0x3C)>>2);
 		var b=((c3&0x03)<<6)|c4;
 		return 'rgb('+r+','+g+','+b+')';
-	};
-	CANVAS_COMPRESS.FourCharsToRGBArray=function CANVAS_COMPRESS_$_FourCharsToRGB(c1,c2,c3,c4)
-	{
-		c1=CANVAS_COMPRESS.CompressCharTo6BitNum(c1);
-		c2=CANVAS_COMPRESS.CompressCharTo6BitNum(c2);
-		c3=CANVAS_COMPRESS.CompressCharTo6BitNum(c3);
-		c4=CANVAS_COMPRESS.CompressCharTo6BitNum(c4);
+	}
+	
+	function FourCharsToRGBArray(c1, c2, c3, c4) {
+		c1 = CompressCharTo6BitNum(c1);
+		c2 = CompressCharTo6BitNum(c2);
+		c3 = CompressCharTo6BitNum(c3);
+		c4 = CompressCharTo6BitNum(c4);
 		// 11111122 22223333 33444444
 		var r=(c1<<2)|((c2&0x30)>>4);
 		var g=((c2&0x0F)<<4)|((c3&0x3C)>>2);
 		var b=((c3&0x03)<<6)|c4;
 		//console.log(r,g,b);
 		return [r,g,b,255];
-	};
-	CANVAS_COMPRESS.RGBToFourCharString=function CANVAS_COMPRESS_$_RGBToFourCharString(r,g,b)
-	{
+	}
+	
+	function RGBToFourCharString(r, g, b) {
 		// 11111122 22223333 33444444
 		var c1=(r&0xFC)>>2;
 		var c2=((r&0x03)<<4)|((g&0xF0)>>4);
 		var c3=((g&0x0F)<<2)|((b&0xC0)>>6);
-		var c4=b&0x3F;
-		return CANVAS_COMPRESS.Inflate6BitNumToChar(c1)+CANVAS_COMPRESS.Inflate6BitNumToChar(c2)+CANVAS_COMPRESS.Inflate6BitNumToChar(c3)+CANVAS_COMPRESS.Inflate6BitNumToChar(c4);
+		var c4 = b&0x3F;
+		return Inflate6BitNumToChar(c1) + Inflate6BitNumToChar(c2) + Inflate6BitNumToChar(c3) + Inflate6BitNumToChar(c4);
+	}
+
+	CANVAS_COMPRESS.EncodeString = function(s) {
+		var c = document.createElement('canvas'),
+		height, width,
+		ctx, img,
+		imdata,
+		i, d,
+		ret;
+
+		s = MakeSafe(s);
+		width = Math.floor(Math.pow(s.length/4,0.5));
+		if (width < 3) {
+			width = 3;
+		}
+		height = Math.ceil((s.length/4)/width);
+		if (height < 1) {
+			height = 1;
+		}
+		while(height*width-2 < s.length/4) {
+			height++;
+		}
+
+		c.width = width;
+		c.height = height; // this must go before getContext!
+		ctx = c.getContext('2d');
+		ctx.globalCompositeOperation = "source-over";
+
+		imdata = ctx.createImageData(width,height);
+		imdata.data[0] = (s.length&0xFF0000000000)>>40;
+		imdata.data[1] = (s.length&0x00FF00000000)>>32;
+		imdata.data[2] = (s.length&0x0000FF000000)>>24;
+		imdata.data[3] = 255;
+
+		imdata.data[4] = (s.length&0x000000FF0000)>>16;
+		imdata.data[5] = (s.length&0x00000000FF00)>>8;
+		imdata.data[6] = s.length&0x0000000000FF;
+		imdata.data[7] = 255;
+
+		// Save the length into the first 2 pixels, hence col starting at 2;
+		// Using 2 pixels allows for ASCII files up to 256 TiB. With a T.
+
+		for (i = 0; i < s.length; i += 4) {
+			ret = FourCharsToRGBArray(s.charAt(i),s.charAt(i+1),s.charAt(i+2),s.charAt(i+3));
+			imdata.data[i+8]=ret[0];
+			imdata.data[i+9]=ret[1];
+			imdata.data[i+10]=ret[2];
+			imdata.data[i+11]=ret[3];
+		}
+
+		ctx.putImageData(imdata,0,0);
+
+		d = c.toDataURL("image/png");
+		if (document.getElementById('saveimages')){
+			img = document.createElement('img');
+			img.src = d;
+			document.getElementById('saveimages').appendChild(img);
+		}
+		return d.substring(HEADER.length); // remove the 'header'
+	};
+	
+	CANVAS_COMPRESS.DecodeImage = function(i, f) {
+		var img = document.createElement('img'),
+		c;
+		img.src = HEADER+i;
+		if (document.getElementById('loadimages')) {
+			document.getElementById('loadimages').appendChild(img);
+		}
+		c = document.createElement('canvas');
+		img.onload = function(){
+
+			var h = img.height,
+			w = img.width,
+			ctx = c.getContext('2d'),
+			ptx, len,
+			s = '',
+			j;
+
+			c.width = w;
+			c.height = h;
+			ctx.globalCompositeOperation = "source-over";
+			ctx.drawImage(img,0,0);
+			px = ctx.getImageData(0,0,w,h);
+			// first 2 pixels contain the length, sufficient to deal with up to 256 TiB ASCII files
+			len=(px.data[0]<<40)+(px.data[1]<<32)+(px.data[2]<<24)+(px.data[4]<<16)+(px.data[5]<<8)+(px.data[6])+8;
+
+			// note: add 8 to skip these properly :)
+			// note 2: 3 and 7 are both alphas.
+
+			// start at 8
+			for(j = 8;j<=len;j+=4) // have to skip the alpha
+			{
+				s+=RGBToFourCharString(px.data[j],px.data[j+1],px.data[j+2]);
+			}
+			if (f) {
+				f(UnMakeSafe(s.replace(/%0Aa*$/,'%0A'))); // the save file must end with a newline and then a's (which are nulls). Remove them
+			}
+
+		};
+
 	};
 
 }(this));
