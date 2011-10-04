@@ -12,6 +12,26 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 	var CANVAS_COMPRESS = window.CANVAS_COMPRESS = {}, // setup an internal link to the global object we are building
 	HEADER = 'data:image/png;base64,';
 
+	function MakeSafe (s) { // Keys, and also types, cannot have newlines or tabs. Although tabs don't _hurt_ values, easier to replace them.
+		s+=''; // make it a string
+		// encodeURIComponent misses these since they are 'valid' in uris
+		// !    %21
+		// '	%27
+		// (	%28
+		// )	%29
+		// *	%30
+		// -	%2D
+		// _	%5F
+		// ~	%7E
+		// .    %2E
+		return encodeURIComponent(s).replace(/!/g,'%21').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%30').replace(/-/g,'%2D').replace(/_/g,'%5F').replace(/~/g,'%7E').replace(/\./g,'%2E').replace(/'/g,'%27'); // ')// Fix syntax highlight
+	}
+	
+	function UnMakeSafe (s) {
+		s+=''; // make it a string
+		return decodeURIComponent(s);
+	}
+
 	CANVAS_COMPRESS.EncodeString=function CANVAS_COMPRESS_$_EncodeString(s)
 	{
 		var c=document.createElement('canvas'),
@@ -22,7 +42,7 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 		i, d,
 		ret;
 
-		s=CANVAS_COMPRESS.MakeSafe(s);
+		s = MakeSafe(s);
 		width=Math.floor(Math.pow(s.length/4,0.5));
 		if (width<3) {
 			width=3;
@@ -111,7 +131,7 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 				s+=CANVAS_COMPRESS.RGBToFourCharString(px.data[j],px.data[j+1],px.data[j+2]);
 			}
 			if (f) {
-				f(CANVAS_COMPRESS.UnMakeSafe(s.replace(/%0Aa*$/,'%0A'))); // the save file must end with a newline and then a's (which are nulls). Remove them
+				f(UnMakeSafe(s.replace(/%0Aa*$/,'%0A'))); // the save file must end with a newline and then a's (which are nulls). Remove them
 			}
 
 		};
@@ -204,28 +224,6 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 		var c3=((g&0x0F)<<2)|((b&0xC0)>>6);
 		var c4=b&0x3F;
 		return CANVAS_COMPRESS.Inflate6BitNumToChar(c1)+CANVAS_COMPRESS.Inflate6BitNumToChar(c2)+CANVAS_COMPRESS.Inflate6BitNumToChar(c3)+CANVAS_COMPRESS.Inflate6BitNumToChar(c4);
-	};
-
-
-
-
-	CANVAS_COMPRESS.MakeSafe=function CANVAS_COMPRESS_$_MakeSafe(s){ // Keys, and also types, cannot have newlines or tabs. Although tabs don't _hurt_ values, easier to replace them.
-		s+=''; // make it a string
-		// encodeURIComponent misses these since they are 'valid' in uris
-		// !    %21
-		// '	%27
-		// (	%28
-		// )	%29
-		// *	%30
-		// -	%2D
-		// _	%5F
-		// ~	%7E
-		// .    %2E
-		return encodeURIComponent(s).replace(/!/g,'%21').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%30').replace(/-/g,'%2D').replace(/_/g,'%5F').replace(/~/g,'%7E').replace(/\./g,'%2E').replace(/'/g,'%27'); // ')// Fix syntax highlight
-	};
-	CANVAS_COMPRESS.UnMakeSafe=function CANVAS_COMPRESSL_$_UnMakeSafe(s){
-		s+=''; // make it a string
-		return decodeURIComponent(s);
 	};
 
 }(this));
