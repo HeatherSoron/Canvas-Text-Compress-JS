@@ -9,8 +9,10 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 
 /* anonymous closure to keep internals out of the global namespace*/
 (function(window, undefined) {
-	var CANVAS_COMPRESS = window.CANVAS_COMPRESS = {}, // setup an internal link to the global object we are building
-	HEADER = 'data:image/png;base64,';
+	var document = window.document,
+		CANVAS_COMPRESS = window.CANVAS_COMPRESS = {}; // setup an internal link to the global object we are building
+	
+	CANVAS_COMPRESS.HEADER = 'data:image/png;base64,';
 
 	function MakeSafe (s) { // Keys, and also types, cannot have newlines or tabs. Although tabs don't _hurt_ values, easier to replace them.
 		s+=''; // make it a string
@@ -165,21 +167,13 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 		ctx.putImageData(imdata,0,0);
 
 		d = c.toDataURL("image/png");
-		if (document.getElementById('saveimages')){
-			img = document.createElement('img');
-			img.src = d;
-			document.getElementById('saveimages').appendChild(img);
-		}
-		return d.substring(HEADER.length); // remove the 'header'
+		return d.substring(CANVAS_COMPRESS.HEADER.length); // remove the 'header'
 	};
 	
 	CANVAS_COMPRESS.DecodeImage = function(i, f) {
 		var img = document.createElement('img'),
 		c;
-		img.src = HEADER+i;
-		if (document.getElementById('loadimages')) {
-			document.getElementById('loadimages').appendChild(img);
-		}
+		img.src = CANVAS_COMPRESS.HEADER + i;
 		c = document.createElement('canvas');
 		img.onload = function(){
 

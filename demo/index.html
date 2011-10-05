@@ -37,16 +37,28 @@
     </tr>
     <script type="text/javascript">
         <!--
-        
-
-function Save(){
-    document.getElementById('output').value=CANVAS_COMPRESS.EncodeString(document.getElementById('input').value+'\n')
-}
-
-function Load(){
-    CANVAS_COMPRESS.DecodeImage(document.getElementById('output').value,function(s){document.getElementById('input').value=s})
-}
-
+				
+	var input = document.getElementById('input'),
+	output = document.getElementById('output'),
+	loadimages = document.getElementById('loadimages'),
+	saveimages = document.getElementById('saveimages');
+	
+	function Save() {
+		var img = document.createElement('img'),
+		data = CANVAS_COMPRESS.EncodeString(input.value + '\n');
+		img.src = CANVAS_COMPRESS.HEADER + data;
+		saveimages.appendChild(img);
+    output.value = data;
+	}
+	
+	function Load() {
+		var img = document.createElement('img'),
+			data = output.value;
+		img.src = CANVAS_COMPRESS.HEADER + data;
+		loadimages.appendChild(img);
+    CANVAS_COMPRESS.DecodeImage(data, function(s) { input.value = s; })
+	}
+	
         //-->
     </script>
 </table>
