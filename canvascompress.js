@@ -21,12 +21,12 @@ You should have received a copy of the CC0 Public Domain Dedication along with t
 		// '	%27
 		// (	%28
 		// )	%29
-		// *	%30
+		// *	%2A
 		// -	%2D
 		// _	%5F
 		// ~	%7E
 		// .    %2E
-		return encodeURIComponent(s).replace(/!/g,'%21').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%30').replace(/-/g,'%2D').replace(/_/g,'%5F').replace(/~/g,'%7E').replace(/\./g,'%2E').replace(/'/g,'%27'); // ')// Fix syntax highlight
+		return encodeURIComponent(s).replace(/!/g,'%21').replace(/\(/g,'%28').replace(/\)/g,'%29').replace(/\*/g,'%2A').replace(/-/g,'%2D').replace(/_/g,'%5F').replace(/~/g,'%7E').replace(/\./g,'%2E').replace(/'/g,'%27'); // ')// Fix syntax highlight
 	}
 	
 	function UnMakeSafe (s) {
